@@ -1,16 +1,19 @@
 package ir.madeon
 
 import android.os.Bundle
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.platform.LocalContext
 import ir.madeon.ui.theme.MadeOnTheme
 
 class MainActivity : ComponentActivity() {
@@ -20,9 +23,10 @@ class MainActivity : ComponentActivity() {
         setContent {
             MadeOnTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
+                    // فراخوانی کامپوزابل وب‌ویو
+                    WebViewScreen(
+                        url = "https://madeon.ir",
+                        modifier = Modifier.fillMaxSize()
                     )
                 }
             }
@@ -31,17 +35,25 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
+fun WebViewScreen(url: String, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+
+    // مدیریت دکمه بازگشت (Back) برای مرور تاریخچه وب‌سایت
+    var webView: WebView? = null
+    BackHandler(enabled = webView?.canGoBack() == true) {
+        webView?.goBack()
+    }
+
+    AndroidView(
+        factory = { ctx ->
+            WebView(ctx).apply {
+                webView = this // ذخیره رفرنس برای مدیریت دکمه بازگشت
+                webViewClient = WebViewClient() // باز شدن لینک‌ها داخل خود اپلیکیشن
+                settings.javaScriptEnabled = true // فعال‌سازی جاوا اسکریپت
+                settings.domStorageEnabled = true // فعال‌سازی ذخیره‌سازی لوکال
+                loadUrl(url)
+            }
+        },
         modifier = modifier
     )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    MadeOnTheme {
-        Greeting("Android")
-    }
 }
